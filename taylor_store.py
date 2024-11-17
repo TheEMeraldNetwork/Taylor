@@ -164,7 +164,7 @@ class TaylorStoreGenerator:
         <!-- Header -->
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-purple-800 mb-2">Taylor Swift Store Helper</h1>
-            <p class="text-gray-600">For Family in USA</p>
+            <p class="text-gray-600">Da Vittoria per la Family in USA</p>
             <p class="text-sm text-gray-500">Updated: {date}</p>
         </header>
 
