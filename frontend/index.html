@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Taylor Swift Store Helper</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-purple-50 to-pink-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-purple-800 mb-2">Taylor Swift Store Helper</h1>
+            <p class="text-gray-600">For Family in USA 🇺🇸</p>
+            <p class="text-sm text-gray-500" id="lastUpdate">Updated: <span id="updateTime"></span></p>
+        </header>
+
+        <!-- Search -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" 
+                           id="searchInput" 
+                           class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="Search Taylor Swift merchandise...">
+                    <button onclick="searchProducts(document.getElementById('searchInput').value)" 
+                            class="bg-purple-600 text-white px-8 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        Search
+                    </button>
+                </div>
+                
+                <!-- Quick Filters -->
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <button data-quick-search="eras tour" 
+                            class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors">
+                        Eras Tour
+                    </button>
+                    <button data-quick-search="merch" 
+                            class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors">
+                        Merch
+                    </button>
+                    <button data-quick-search="clothing" 
+                            class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors">
+                        Clothing
+                    </button>
+                    <button data-quick-search="accessories" 
+                            class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors">
+                        Accessories
+                    </button>
+                </div>
+
+                <!-- Store Filters -->
+                <div class="mt-4 text-sm text-gray-600">
+                    Searching in: 
+                    <span class="font-medium">Official Store</span> • 
+                    <span class="font-medium">Universal Music</span> • 
+                    <span class="font-medium">Amazon</span> • 
+                    <span class="font-medium">Etsy</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div class="flex space-x-4">
+                    <button onclick="showTab('results')" 
+                            id="resultsTab"
+                            class="px-4 py-2 bg-purple-600 text-white rounded-lg transition-colors">
+                        Search Results
+                    </button>
+                    <button onclick="showTab('wishlist')" 
+                            id="wishlistTab"
+                            class="px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-purple-50 transition-colors">
+                        Wishlist (<span id="wishlistCount">0</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="resultsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Products will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Wishlist Area -->
+        <div id="wishlistArea" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wishlistBody">
+                        <!-- Wishlist items will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white p-4 rounded-lg shadow-lg">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="hidden fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <!-- Error text will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Update time on load
+        document.getElementById('updateTime').textContent = new Date().toLocaleString();
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
