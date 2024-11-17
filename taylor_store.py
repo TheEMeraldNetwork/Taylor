@@ -1,4 +1,4 @@
-# SEZ_ID_001: Imports e setup iniziale
+### SEZ_ID_001: Imports e setup iniziale
 import requests
 import json
 import os
