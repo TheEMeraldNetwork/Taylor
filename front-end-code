@@ -25,12 +25,9 @@ class TaylorStoreGenerator:
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.StreamHandler(sys.stdout)
-            ]
+            handlers=[logging.StreamHandler(sys.stdout)]
         )
 
-# ----- INIZIO MODIFICA DEL METODO search_products -----
     def search_products(self, query):
         """Search products using Google Custom Search"""
         params = {
@@ -51,7 +48,6 @@ class TaylorStoreGenerator:
         except Exception as e:
             logging.error(f"Search error: {e}")
             return None
-# ----- FINE MODIFICA DEL METODO search_products -----
 
     def download_image(self, url, retries=3):
         """Download and cache images with retry logic"""
@@ -129,9 +125,8 @@ class TaylorStoreGenerator:
         return products
 
     def get_template(self):
-        """Returns the HTML template"""
-        return """
-<!DOCTYPE html>
+        """Returns the HTML template with embedded Google Custom Search"""
+        return '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -139,15 +134,19 @@ class TaylorStoreGenerator:
     <title>Taylor Swift Store Helper</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script async src="https://cse.google.com/cse.js?cx=60f3d97ca3e7348dd"></script>
     <style>
-        .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        .gsc-control-cse {
+            background-color: transparent !important;
+            border: none !important;
+            padding: 0 !important;
         }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .gsc-input-box {
+            border-radius: 0.5rem !important;
+        }
+        .gsc-search-button-v2 {
+            border-radius: 0.5rem !important;
+            padding: 8px 16px !important;
         }
     </style>
 </head>
@@ -159,37 +158,29 @@ class TaylorStoreGenerator:
             <p class="text-sm text-gray-500">Updated: {date}</p>
         </header>
 
-        <div class="max-w-2xl mx-auto mb-8">
+        <div class="max-w-4xl mx-auto mb-8">
             <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex gap-2">
-                    <input type="text" id="searchInput" 
-                           class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                           placeholder="Search Taylor Swift merchandise...">
-                    <button onclick="performSearch()" 
-                            class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
-                        Search
-                    </button>
-                </div>
+                <div class="gcse-search"></div>
             </div>
         </div>
 
-        <div class="mb-8">
-            <div class="flex justify-between items-center">
-                <div class="flex space-x-4">
-                    <button onclick="showTab('results')" 
-                            class="px-4 py-2 bg-purple-600 text-white rounded-lg">
-                        Results
-                    </button>
-                    <button onclick="showTab('wishlist')" 
-                            class="px-4 py-2 bg-white text-purple-600 rounded-lg">
-                        Wishlist (<span id="wishlistCount">0</span>)
-                    </button>
-                </div>
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex space-x-4">
+                <button onclick="showTab('results')" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg">
+                    Curated Products
+                </button>
+                <button onclick="showTab('wishlist')" 
+                        class="px-4 py-2 bg-white text-purple-600 rounded-lg">
+                    Wishlist (<span id="wishlistCount">0</span>)
+                </button>
             </div>
         </div>
 
-        <div id="resultsArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products}
+        <div id="resultsArea" class="mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products}
+            </div>
         </div>
 
         <div id="wishlistArea" class="hidden">
@@ -209,120 +200,103 @@ class TaylorStoreGenerator:
         </div>
     </div>
 
-    <script>
-        let wishlist = JSON.parse(localStorage.getItem('taylorWishlist')) || {};
+<script>
+let wishlist = JSON.parse(localStorage.getItem('taylorWishlist')) || {};
 
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('.product-card');
-            let visibleCount = 0;
-            
-            cards.forEach(card => {
-                const content = card.textContent.toLowerCase();
-                if (content.includes(query)) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+function showTab(tabName) {
+    const resultsArea = document.getElementById('resultsArea');
+    const wishlistArea = document.getElementById('wishlistArea');
+    
+    if (tabName === 'results') {
+        resultsArea.classList.remove('hidden');
+        wishlistArea.classList.add('hidden');
+    } else {
+        wishlistArea.classList.remove('hidden');
+        resultsArea.classList.add('hidden');
+        updateWishlistTable();
+    }
+}
+
+function toggleWishlist(productId, title, price, image) {
+    if (wishlist[productId]) {
+        delete wishlist[productId];
+    } else {
+        wishlist[productId] = {
+            title: title,
+            price: price,
+            image: image,
+            notes: ''
+        };
+    }
+    
+    localStorage.setItem('taylorWishlist', JSON.stringify(wishlist));
+    updateWishlistCount();
+    updateWishlistButtons(productId);
+    updateWishlistTable();
+}
+
+function updateWishlistCount() {
+    document.getElementById('wishlistCount').textContent = Object.keys(wishlist).length;
+}
+
+function updateWishlistButtons(productId) {
+    const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+    buttons.forEach(button => {
+        const icon = button.querySelector('i');
+        if (wishlist[productId]) {
+            icon.classList.add('text-red-500');
+        } else {
+            icon.classList.remove('text-red-500');
         }
+    });
+}
 
-        function showTab(tabName) {
-            const resultsArea = document.getElementById('resultsArea');
-            const wishlistArea = document.getElementById('wishlistArea');
-            
-            if (tabName === 'results') {
-                resultsArea.classList.remove('hidden');
-                wishlistArea.classList.add('hidden');
-            } else {
-                wishlistArea.classList.remove('hidden');
-                resultsArea.classList.add('hidden');
-                updateWishlistTable();
-            }
-        }
+function updateWishlistTable() {
+    const tbody = document.getElementById('wishlistBody');
+    tbody.innerHTML = '';
+    
+    Object.entries(wishlist).forEach(([id, item]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-6 py-4">
+                <div class="flex items-center">
+                    <img class="h-10 w-10 rounded-full" src="${item.image}" alt="${item.title}">
+                    <div class="ml-4">${item.title}</div>
+                </div>
+            </td>
+            <td class="px-6 py-4">${item.price}</td>
+            <td class="px-6 py-4">
+                <textarea
+                    onchange="updateNotes('${id}', this.value)"
+                    class="w-full px-2 py-1 border rounded"
+                    placeholder="Add notes..."
+                >${item.notes}</textarea>
+            </td>
+            <td class="px-6 py-4">
+                <button onclick="toggleWishlist('${id}')" 
+                        class="text-red-600 hover:text-red-900">
+                    Remove
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
 
-        function toggleWishlist(productId, title, price, image) {
-            if (wishlist[productId]) {
-                delete wishlist[productId];
-            } else {
-                wishlist[productId] = {
-                    title: title,
-                    price: price,
-                    image: image,
-                    notes: ''
-                };
-            }
-            
-            localStorage.setItem('taylorWishlist', JSON.stringify(wishlist));
-            updateWishlistCount();
-            updateWishlistButtons(productId);
-            updateWishlistTable();
-        }
+function updateNotes(productId, notes) {
+    if (wishlist[productId]) {
+        wishlist[productId].notes = notes;
+        localStorage.setItem('taylorWishlist', JSON.stringify(wishlist));
+    }
+}
 
-        function updateWishlistCount() {
-            document.getElementById('wishlistCount').textContent = Object.keys(wishlist).length;
-        }
-
-        function updateWishlistButtons(productId) {
-            const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
-            buttons.forEach(button => {
-                const icon = button.querySelector('i');
-                if (wishlist[productId]) {
-                    icon.classList.add('text-red-500');
-                } else {
-                    icon.classList.remove('text-red-500');
-                }
-            });
-        }
-
-        function updateWishlistTable() {
-            const tbody = document.getElementById('wishlistBody');
-            tbody.innerHTML = '';
-            
-            Object.entries(wishlist).forEach(([id, item]) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4">
-                        <div class="flex items-center">
-                            <img class="h-10 w-10 rounded-full" src="${item.image}" alt="${item.title}">
-                            <div class="ml-4">${item.title}</div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">${item.price}</td>
-                    <td class="px-6 py-4">
-                        <textarea
-                            onchange="updateNotes('${id}', this.value)"
-                            class="w-full px-2 py-1 border rounded"
-                            placeholder="Add notes..."
-                        >${item.notes}</textarea>
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="toggleWishlist('${id}')" 
-                                class="text-red-600 hover:text-red-900">
-                            Remove
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function updateNotes(productId, notes) {
-            if (wishlist[productId]) {
-                wishlist[productId].notes = notes;
-                localStorage.setItem('taylorWishlist', JSON.stringify(wishlist));
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateWishlistCount();
-            Object.keys(wishlist).forEach(updateWishlistButtons);
-        });
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+    updateWishlistCount();
+    Object.keys(wishlist).forEach(updateWishlistButtons);
+});
+</script>
 </body>
-</html>
-"""
+</html>'''
 
     def generate_product_cards(self, products):
         """Generate HTML for product cards"""
@@ -356,7 +330,6 @@ class TaylorStoreGenerator:
             cards.append(card)
         return '\n'.join(cards)
 
-# ----- INIZIO MODIFICA DEL METODO generate_html -----
     def generate_html(self, products):
         """Generate final HTML file"""
         html_content = self.html_template.replace('{date}', datetime.now().strftime("%d/%m/%Y %H:%M"))
@@ -367,8 +340,7 @@ class TaylorStoreGenerator:
         output_file.write_text(html_content, encoding='utf-8')
         
         return str(output_file)
-# ----- FINE MODIFICA DEL METODO generate_html -----
-               
+
     def run(self):
         """Main execution method"""
         logging.info("Starting search...")
@@ -387,9 +359,8 @@ class TaylorStoreGenerator:
                 new_products = self.process_products(results)
                 products.extend(new_products)
                 logging.info(f"Found {len(new_products)} products for query: {query}")
-            time.sleep(2)  # Respect API rate limits
+            time.sleep(2)
 
-        # Remove duplicates based on title
         unique_products = {p['title']: p for p in products}.values()
         
         if unique_products:
@@ -401,5 +372,24 @@ class TaylorStoreGenerator:
             return None
 
 if __name__ == "__main__":
-    store = TaylorStoreGenerator()
-    store.run()
+    try:
+        # Create placeholder image if it doesn't exist
+        if not os.path.exists('placeholder.jpg'):
+            url = "https://via.placeholder.com/400x400.jpg?text=Product+Image+Not+Available"
+            response = requests.get(url)
+            with open('placeholder.jpg', 'wb') as f:
+                f.write(response.content)
+        
+        store = TaylorStoreGenerator()
+        output_file = store.run()
+        
+        if output_file:
+            print(f"\nStore generated successfully!")
+            print(f"Open this file in your browser: {output_file}")
+            print("\nNote: Make sure to keep the cache folder alongside the HTML file for images to work.")
+        else:
+            print("\nError: Failed to generate store. Check the logs for details.")
+    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise
